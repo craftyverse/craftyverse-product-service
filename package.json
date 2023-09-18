@@ -1,0 +1,12 @@
+{
+  "name": "craftyverse-product-service",
+  "version": "1.0.0",
+  "description": "This service manages the product catalogue of craftyverse",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
