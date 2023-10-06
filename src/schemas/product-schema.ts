@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { ProductStatus } from "@craftyverse-au/craftyverse-common";
 
 // productLocationId: string;
 // productCategoryId: string;

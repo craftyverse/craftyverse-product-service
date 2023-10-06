@@ -30,8 +30,8 @@ const locationSchema = new mongoose.Schema(
     locationName: { type: String, required: true },
     locationEmail: { type: String, required: true },
     locationApproved: { type: Boolean, required: true },
-    locationLegalAddressLine1: { type: Boolean, required: true },
-    locationLegalAddressLine2: { type: Boolean, required: true },
+    locationLegalAddressLine1: { type: String, required: true },
+    locationLegalAddressLine2: { type: String, required: true },
   },
   {
     toJSON: {

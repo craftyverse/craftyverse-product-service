@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 import { app } from "./app";
 import redisClient from "./services/redis-service";
-import { natsWrapper } from "./services/nats-wrapper";
-import { LocationCreatedListener } from "./events/listeners/location-created-listener";
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
