@@ -4,11 +4,15 @@ import { LocationDocument } from "./Location";
 interface ProductFields {
   productUserId: string;
   productLocation: LocationDocument;
-  // This will change
+  // This will change to store actual productCategory service payload definitions
   productCategoryId: string;
   productName: string;
   productDescription: string;
-  productImageIds: string[];
+  // This will change to store actual productImage service payload definitions
+  productImages: string[];
+
+  // This will change to store actual productItem service payload definitions
+  productitems: string[];
 }
 
 interface ProductModel extends mongoose.Model<ProductDocument> {
@@ -18,11 +22,11 @@ interface ProductModel extends mongoose.Model<ProductDocument> {
 interface ProductDocument extends mongoose.Document {
   productUserId: string;
   productLocation: LocationDocument;
-  // This will change
+  // This will change to store an actual product category
   productCategoryId: string;
   productName: string;
   productDescription: string;
-  productImageIds: string[];
+  productImages: string[];
 }
 
 const productSchema = new mongoose.Schema(

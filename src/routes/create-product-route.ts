@@ -4,6 +4,8 @@ import {
   NotFoundError,
   RequestValidationError,
   requireAuth,
+  awsSnsClient,
+  awsSqsClient,
 } from "@craftyverse-au/craftyverse-common";
 import express, { Request, Response } from "express";
 import { Location } from "../models/Location";
@@ -13,8 +15,6 @@ import {
   NewProductRequest,
 } from "../schemas/product-schema";
 import redisClient from "../services/redis-service";
-import { awsSnsClient } from "../services/sns-service";
-import { awsSqsClient } from "../services/sqs-service";
 import { awsConfig } from "../config/aws-config";
 import { SQSClientConfig } from "@aws-sdk/client-sqs";
 const router = express.Router();
@@ -50,7 +50,7 @@ router.post(
 
     const locationCreatedQueueArn = await awsSqsClient.getQueueArnByUrl(
       awsConfig as SQSClientConfig,
-      "http://craftyverse-aws-localcstack:4566/000000000000/location_created_queue"
+      `${process.env.LOCALSTACK_HOST_URL}/location_created_queue`
     );
 
     const fullTopicArn = await awsSnsClient.getFullTopicArnByTopicName(
@@ -77,12 +77,11 @@ router.post(
 
     const latestMsg = await awsSqsClient.receiveQueueMessage(
       awsConfig as SQSClientConfig,
-      "http://craftyverse-aws-localcstack:4566/000000000000/location_created_queue",
+      `${process.env.LOCALSTACK_HOST_URL}/location_created_queue`,
       {
         attributeNames: ["All"],
         maxNumberOfMessages: 10,
         waitTimeSeconds: 5,
-        visibilityTimeout: 0,
       }
     );
 
@@ -101,6 +100,8 @@ router.post(
     });
 
     console.log("This is the batch location event: ", locations);
+
+    // Might be benifitial to delete the processed location created events after processing
 
     // console.log("This is the batch location event: ", batchLocationEvent);
     // console.log("This are the latest message: ", latestMsg.Messages);
@@ -121,15 +122,21 @@ router.post(
         locationLegalAddressLine2: location.locationLegalAddressLine2,
       });
 
-      await locationEvent.save();
+      const createdProductLocation = await locationEvent.save();
+      console.log(
+        "This is the created product location: ",
+        createdProductLocation
+      );
     });
 
     // STEP 1:
     // Find the location that a new product needs to be associated to.
 
-    const location = await Location.findById(
-      createProductRequest.productLocationId
-    );
+    const location = await Location.findOne({
+      locationId: createProductRequest.productLocationId,
+    });
+
+    console.log("This is the location: ", location);
 
     if (!location) {
       throw new NotFoundError("The location does not exist");
@@ -143,7 +150,8 @@ router.post(
       productCategoryId: createProductRequest.productCategoryId,
       productName: createProductRequest.productName,
       productDescription: createProductRequest.productDescription,
-      productImageIds: createProductRequest.productImageIds,
+      productImages: createProductRequest.productImageIds,
+      productitems: [],
     });
 
     const savedProduct = await createProduct.save();
@@ -160,7 +168,7 @@ router.post(
       productCategoryId: savedProduct.productCategoryId,
       productName: savedProduct.productName,
       productDescription: savedProduct.productName,
-      productImageIds: savedProduct.productImageIds,
+      productImages: savedProduct.productImages,
     };
 
     redisClient.set(savedProduct.id, createdProductResponse);
