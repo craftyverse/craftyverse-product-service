@@ -4,7 +4,6 @@ import {
   NotFoundError,
   RequestValidationError,
   requireAuth,
-  awsSnsClient,
   awsSqsClient,
 } from "@craftyverse-au/craftyverse-common";
 import express, { Request, Response } from "express";
@@ -48,33 +47,6 @@ router.post(
     // STEP 0:
     // Extract location info from sns topic
 
-    const locationCreatedQueueArn = await awsSqsClient.getQueueArnByUrl(
-      awsConfig as SQSClientConfig,
-      `${process.env.LOCALSTACK_HOST_URL}/location_created_queue`
-    );
-
-    const fullTopicArn = await awsSnsClient.getFullTopicArnByTopicName(
-      awsConfig,
-      "location-created"
-    );
-
-    if (!fullTopicArn) {
-      throw new NotFoundError("Could not find event message");
-    }
-
-    const subscribeToTopicResponse = await awsSnsClient.subscribeToTopic(
-      awsConfig,
-      {
-        topicArn: fullTopicArn,
-        protocol: "sqs",
-        endpoint: locationCreatedQueueArn,
-      }
-    );
-
-    if (!subscribeToTopicResponse) {
-      throw new BadRequestError("Cannot get subscription topic response");
-    }
-
     const latestMsg = await awsSqsClient.receiveQueueMessage(
       awsConfig as SQSClientConfig,
       `${process.env.LOCALSTACK_HOST_URL}/location_created_queue`,
@@ -88,6 +60,7 @@ router.post(
     if (!latestMsg || !latestMsg.Messages) {
       throw new BadRequestError("Something is wrong!");
     }
+    console.log("This is the latest messages in queue: ", latestMsg);
 
     const batchLocationEvent: LocationCreatedEvent[] = latestMsg.Messages.map(
       (msg) => {
@@ -102,9 +75,6 @@ router.post(
     console.log("This is the batch location event: ", locations);
 
     // Might be benifitial to delete the processed location created events after processing
-
-    // console.log("This is the batch location event: ", batchLocationEvent);
-    // console.log("This are the latest message: ", latestMsg.Messages);
 
     // awsSqsClient.deleteQueueMessage(
     //   awsConfig as SQSClientConfig,

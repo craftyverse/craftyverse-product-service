@@ -1,6 +1,14 @@
 import mongoose from "mongoose";
 import { app } from "./app";
 import redisClient from "./services/redis-service";
+import {
+  BadRequestError,
+  NotFoundError,
+  awsSnsClient,
+  awsSqsClient,
+} from "@craftyverse-au/craftyverse-common";
+import { awsConfig } from "./config/aws-config";
+import { SQSClientConfig } from "@aws-sdk/client-sqs";
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
@@ -16,6 +24,33 @@ const start = async () => {
   }
 
   redisClient.ping();
+
+  const fullTopicArn = await awsSnsClient.getFullTopicArnByTopicName(
+    awsConfig,
+    "location_created"
+  );
+
+  const locationCreatedQueueArn = await awsSqsClient.getQueueArnByUrl(
+    awsConfig as SQSClientConfig,
+    `${process.env.LOCALSTACK_HOST_URL}/location_created_queue`
+  );
+
+  if (!fullTopicArn) {
+    throw new NotFoundError("Could not find event message");
+  }
+
+  const subscribeToTopicResponse = await awsSnsClient.subscribeToTopic(
+    awsConfig,
+    {
+      topicArn: fullTopicArn,
+      protocol: "sqs",
+      endpoint: locationCreatedQueueArn,
+    }
+  );
+
+  if (!subscribeToTopicResponse) {
+    throw new BadRequestError("Cannot get subscription topic response");
+  }
 
   try {
     console.log("connecting to mongodb...");
