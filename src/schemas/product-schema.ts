@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-// productLocationId: string;
-// productCategoryId: string;
-// productName: string;
-// productDescription: string;
-// productImages: string[];
-
-// locationName: string;
-// locationEmail: string;
-// locationApproved: boolean;
-// locationLegalAddressLine1: string;
-// locationLegalAddressLine2: string | undefined;
-
 export const productLocationSchema = z.object({
   locationName: z.string(),
   locationEmail: z.string(),
@@ -25,7 +13,13 @@ export const productRequestSchema = z.object({
   productCategoryId: z.string(),
   productName: z.string(),
   productDescription: z.string(),
-  productImageIds: z.string().array(),
+  productImages: z
+    .object({
+      productImageFileName: z.string(),
+      productImageFileOriginalName: z.string(),
+      productImageDescription: z.string(),
+    })
+    .array(),
 });
 
 export const productResponseSchema = z.object({});

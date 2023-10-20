@@ -6,11 +6,16 @@ import {
   NotFoundError,
   awsSnsClient,
   awsSqsClient,
+  imageEventVariables,
+  imageQueueVariables,
+  locationEventVariables,
+  locationQueueVariables,
 } from "@craftyverse-au/craftyverse-common";
 import { awsConfig } from "./config/aws-config";
 import { SQSClientConfig } from "@aws-sdk/client-sqs";
 
 const start = async () => {
+  // ======================= env validation ===========================
   if (!process.env.JWT_KEY) {
     throw new Error("JWT_KEY is not supplied.");
   }
@@ -25,30 +30,57 @@ const start = async () => {
 
   redisClient.ping();
 
-  const fullTopicArn = await awsSnsClient.getFullTopicArnByTopicName(
-    awsConfig,
-    "location_created"
-  );
+  // ======================= Getting message topics ===========================
+  const getlocationCreatedTopicArn =
+    await awsSnsClient.getFullTopicArnByTopicName(
+      awsConfig,
+      locationEventVariables.LOCATION_CREATED_EVENT
+    );
 
+  const getImageuploadedTopicArn =
+    await awsSnsClient.getFullTopicArnByTopicName(
+      awsConfig,
+      imageEventVariables.IMAGE_UPLOADED_EVENT
+    );
+
+  // ======================= Getting queue arns ===========================
   const locationCreatedQueueArn = await awsSqsClient.getQueueArnByUrl(
     awsConfig as SQSClientConfig,
-    `${process.env.LOCALSTACK_HOST_URL}/location_created_queue`
+    `${process.env.LOCALSTACK_HOST_URL}/${locationQueueVariables.LOCATION_CREATED_QUEUE}`
   );
 
-  if (!fullTopicArn) {
+  const imageUploadedQueueArn = await awsSqsClient.getQueueArnByUrl(
+    awsConfig as SQSClientConfig,
+    `${process.env.LOCALSTACK_HOST_URL}/${imageQueueVariables.IMAGE_UPLOADED_QUEUE}`
+  );
+
+  if (!getlocationCreatedTopicArn || !getImageuploadedTopicArn) {
     throw new NotFoundError("Could not find event message");
   }
 
+  // ======================= Subscribing to topics ===========================
   const subscribeToTopicResponse = await awsSnsClient.subscribeToTopic(
     awsConfig,
     {
-      topicArn: fullTopicArn,
+      topicArn: getlocationCreatedTopicArn,
       protocol: "sqs",
       endpoint: locationCreatedQueueArn,
     }
   );
 
-  if (!subscribeToTopicResponse) {
+  const subscribeToimageUploadRespnse = await awsSnsClient.subscribeToTopic(
+    awsConfig,
+    {
+      topicArn: getImageuploadedTopicArn,
+      protocol: "sqs",
+      endpoint: imageUploadedQueueArn,
+    }
+  );
+
+  console.log("The location created topic is subscribed");
+  console.log("The image upload topic is subscribed");
+
+  if (!subscribeToTopicResponse || !subscribeToimageUploadRespnse) {
     throw new BadRequestError("Cannot get subscription topic response");
   }
 

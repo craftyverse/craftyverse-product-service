@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { LocationDocument } from "./Location";
+import { ProductImageDocument } from "./ProductImage";
 
 interface ProductFields {
   productUserId: string;
@@ -9,7 +10,7 @@ interface ProductFields {
   productName: string;
   productDescription: string;
   // This will change to store actual productImage service payload definitions
-  productImages: string[];
+  productImages: ProductImageDocument[];
 
   // This will change to store actual productItem service payload definitions
   productitems: string[];
@@ -26,7 +27,7 @@ interface ProductDocument extends mongoose.Document {
   productCategoryId: string;
   productName: string;
   productDescription: string;
-  productImages: string[];
+  productImages: ProductImageDocument[];
 }
 
 const productSchema = new mongoose.Schema(
@@ -35,12 +36,13 @@ const productSchema = new mongoose.Schema(
     productLocation: { type: mongoose.Schema.Types.ObjectId, ref: "Location" },
     productCategoryId: { type: String, required: false },
     productName: { type: String, required: true },
+    productImages: { type: Array, ref: "ProductImage" },
     productDescription: { type: String, required: true },
   },
   {
     toJSON: {
       transform(doc, ret) {
-        ret.productId = ret._id;
+        ret.productImageId = ret._id;
         delete ret._id;
       },
     },
