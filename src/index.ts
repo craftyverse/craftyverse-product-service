@@ -13,6 +13,7 @@ import {
 } from "@craftyverse-au/craftyverse-common";
 import { awsConfig } from "./config/aws-config";
 import { SQSClientConfig } from "@aws-sdk/client-sqs";
+import { createProductCreatedTopic } from "./events/create-event-definitions";
 
 const start = async () => {
   // ======================= env validation ===========================
@@ -49,10 +50,14 @@ const start = async () => {
     `${process.env.LOCALSTACK_HOST_URL}/${locationQueueVariables.LOCATION_CREATED_QUEUE}`
   );
 
+  console.log("location queue: ", locationCreatedQueueArn);
+
   const imageUploadedQueueArn = await awsSqsClient.getQueueArnByUrl(
     awsConfig as SQSClientConfig,
     `${process.env.LOCALSTACK_HOST_URL}/${imageQueueVariables.IMAGE_UPLOADED_QUEUE}`
   );
+
+  console.log("image queue: ", imageUploadedQueueArn);
 
   if (!getlocationCreatedTopicArn || !getImageuploadedTopicArn) {
     throw new NotFoundError("Could not find event message");
@@ -83,6 +88,10 @@ const start = async () => {
   if (!subscribeToTopicResponse || !subscribeToimageUploadRespnse) {
     throw new BadRequestError("Cannot get subscription topic response");
   }
+
+  // ======================= Creating product created SQS and SNS resources ===========================
+  const createProductTopicArn = await createProductCreatedTopic();
+  console.log("This is the create product topic ARN: ", createProductTopicArn);
 
   try {
     console.log("connecting to mongodb...");

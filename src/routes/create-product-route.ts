@@ -5,7 +5,6 @@ import {
   RequestValidationError,
   requireAuth,
   awsSqsClient,
-  locationQueueVariables,
   imageQueueVariables,
 } from "@craftyverse-au/craftyverse-common";
 import express, { Request, Response } from "express";
@@ -182,6 +181,11 @@ router.post(
       productDescription: savedProduct.productDescription,
       productImages: savedProduct.productImages,
     };
+
+    const productString = JSON.stringify(createdProductResponse);
+    console.log("This is the product string: ", productString);
+
+    // Push resposne to SQS queue
 
     redisClient.set(savedProduct.id, createdProductResponse);
 
