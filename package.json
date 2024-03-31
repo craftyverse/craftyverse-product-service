@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:local": "ts-node-dev --poll src/server.ts",
     "dev:terraform:init": "cd terraform && cd environments && cd dev && tflocal init",
-    "dev:terraform:apply": "cd terraform && cd environments && cd dev && tflocal apply --auto-approve -var-file=variables.tfvars"
+    "dev:terraform:apply": "cd terraform && cd environments && cd dev && tflocal apply --auto-approve -var-file=variables.tfvars",
+    "dev:local": "npm run dev:terraform:apply && ts-node-dev --poll src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +22,7 @@
     "@types/ioredis": "^5.0.0",
     "@types/jest": "^29.5.11",
     "@types/mongoose": "^5.11.97",
+    "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.11.2",
     "@types/sequelize": "^4.28.20",
     "@types/supertest": "^2.0.16",
@@ -36,6 +37,7 @@
     "jest": "^29.7.0",
     "mongodb-memory-server": "^9.1.1",
     "mongoose": "^8.0.2",
+    "node-cron": "^3.0.3",
     "pg": "^8.11.3",
     "sequelize": "^6.37.1",
     "supertest": "^6.3.3",

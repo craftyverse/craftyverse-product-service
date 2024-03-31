@@ -11,3 +11,9 @@ module "sns" {
   prodcut_created_topic = var.product_created_topic
 }
 
+module "sqs" {
+  source = "../../modules/sqs"
+
+  product_created_queue = var.product_created_queue
+}
+
