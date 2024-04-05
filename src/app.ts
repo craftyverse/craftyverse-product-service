@@ -3,7 +3,7 @@ import cors from "cors";
 import { corsOptions } from "../config/cors-options";
 import { logger } from "./middleware/log-events";
 import { credentials } from "./middleware/credentials";
-import { v1ProductRouter } from "./routes/v1/product-routes";
+import { v1ProductRouter } from "./routes/v1/product-routes/product-routes";
 import {
   NotFoundError,
   errorHandler,

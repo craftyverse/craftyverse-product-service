@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { verifyJWT } from "@craftyverse-au/craftyverse-common";
-import { createProductHandler } from "../../controllers/product-controllers/product-api/create-product-controller";
+import { createProductHandler } from "../../../controllers/product-controllers/api/create-product-controller";
 
 const router = express.Router();
 
@@ -11,6 +11,7 @@ router.get("/healthcheck", (req: Request, res: Response) => {
   });
 });
 
+// Product APIs
 router.post("/createProduct", verifyJWT, createProductHandler);
 
 export { router as v1ProductRouter };

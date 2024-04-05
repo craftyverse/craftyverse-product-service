@@ -14,23 +14,23 @@ export class ProductService {
   /**
    * This function creates a product in the database.
    * @param product
-   * @returns {Model<any, any>}
+   * @returns {any}
    */
-  static async createProduct(product: Product): Promise<[number, number]> {
+  static async createProduct(product: Product): Promise<any> {
     const dbInstance = new Sequelize(`${process.env.POSTGRES_CONNECTION_URI}`);
     const storedProduct = await dbInstance.query(
       `INSERT INTO product (
-        'locationId',
-        'name',
-        'description',
-        'createdAt',
-        'deletedAt'
+        "locationId",
+        "name",
+        "description",
+        "createdAt",
+        "deletedAt"
       ) values (
         '${product.locationId}',
         '${product.name}',
         '${product.description}',
         '${product.createdAt}',
-        '${product.deletedAt}'
+        ${product.deletedAt}
       )
         RETURNING *;`,
       { type: QueryTypes.INSERT }
