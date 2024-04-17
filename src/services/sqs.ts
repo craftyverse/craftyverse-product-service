@@ -2,15 +2,21 @@ import {
   CreateQueueCommand,
   CreateQueueCommandInput,
   CreateQueueCommandOutput,
+  DeleteMessageBatchCommandInput,
+  DeleteMessageBatchCommandOutput,
+  DeleteMessageBatchCommand,
+  DeleteMessageCommandInput,
+  DeleteMessageCommandOutput,
+  DeleteMessageCommand,
   GetQueueAttributesCommand,
   GetQueueAttributesCommandInput,
-  GetQueueAttributesCommandOutput,
   ListQueuesCommand,
   QueueAttributeName,
   ReceiveMessageCommand,
   ReceiveMessageCommandInput,
   SQSClient,
   SQSClientConfig,
+  Message,
 } from "@aws-sdk/client-sqs";
 export class SqsService {
   private static sqsClient: SQSClient;
@@ -111,5 +117,68 @@ export class SqsService {
     );
 
     return receiveQueueMessageResponse;
+  }
+
+  /**
+   * This function deletes a particular message from the specified SQS queue
+   * @param config
+   * @param resourceId
+   * @param queueUrl
+   * @param ReceiptHandle
+   * @returns
+   */
+  static async deleteQueueMessageById(
+    config: SQSClientConfig,
+    queueUrl: string,
+    receiptHandle: string
+  ) {
+    const sqsClient = SqsService.createSqsClient(config);
+    const deleteMessageParams: DeleteMessageCommandInput = {
+      QueueUrl: queueUrl,
+      ReceiptHandle: receiptHandle,
+    };
+
+    const deleteMessageCommand: DeleteMessageCommand = new DeleteMessageCommand(
+      deleteMessageParams
+    );
+    const response: DeleteMessageCommandOutput = await sqsClient.send(
+      deleteMessageCommand
+    );
+
+    if (response.$metadata.httpStatusCode !== 200) {
+      throw new Error(
+        `Failed to delete message with receiptHandle: ${receiptHandle}`
+      );
+    }
+
+    return response;
+  }
+
+  static async batchDeleteQueueMessages(
+    config: SQSClientConfig,
+    queueUrl: string,
+    messageList: Message[]
+  ) {
+    const sqsClient = SqsService.createSqsClient(config);
+
+    const batchDeleteMessagesParams: DeleteMessageBatchCommandInput = {
+      QueueUrl: queueUrl,
+      Entries: messageList.map((message) => {
+        return {
+          Id: message["MessageId"],
+          ReceiptHandle: message["ReceiptHandle"],
+        };
+      }),
+    };
+
+    const batchDeleteMessagesCommand: DeleteMessageBatchCommand =
+      new DeleteMessageBatchCommand(batchDeleteMessagesParams);
+
+    const batchDeleteMessagesResponse: DeleteMessageBatchCommandOutput =
+      await sqsClient.send(batchDeleteMessagesCommand);
+
+    console.log(batchDeleteMessagesResponse);
+
+    return batchDeleteMessagesResponse.Successful;
   }
 }

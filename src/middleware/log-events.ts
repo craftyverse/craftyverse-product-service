@@ -10,16 +10,37 @@ const logEvents = async (message: string, logName: string) => {
   const logItem = `[${dateTime}]\t${v4()}\t${message}\n`;
 
   try {
-    if (!fs.existsSync(path.join(__dirname, "..", "logs"))) {
-      await fsPromises.mkdir(path.join(__dirname, "..", "logs"));
+    if (process.env.NODE_ENV !== "test") {
+      if (!fs.existsSync(path.join(__dirname, "..", "logs"))) {
+        await fsPromises.mkdir(path.join(__dirname, "..", "logs"));
+      }
+      await fsPromises.appendFile(
+        path.join(__dirname, "..", "logs", logName),
+        logItem
+      );
     }
-    await fsPromises.appendFile(path.join(__dirname, "..", "logs", logName), logItem);
+
+    if (process.env.NODE_ENV === "test") {
+      if (!fs.existsSync(path.join(__dirname, "..", "..", "logs"))) {
+        await fsPromises.mkdir(path.join(__dirname, "..", "..", "logs"));
+      }
+      await fsPromises.appendFile(
+        path.join(__dirname, "..", "..", "logs", "error_test.txt"),
+        logItem
+      );
+    }
   } catch (error) {
     console.log(error);
   }
 };
 
 const logger = (req: Request, res: Response, next: NextFunction) => {
+  if (process.env.NODE_ENV === "test") {
+    logEvents(
+      `${req.method}\t${req.headers.origin}\t${req.url}`,
+      "reqLog_test.txt"
+    );
+  }
   logEvents(`${req.method}\t${req.headers.origin}\t${req.url}`, "reqLog.txt");
   next();
 };

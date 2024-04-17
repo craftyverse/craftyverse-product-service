@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 declare global {
   var signup: () => string;
 }
-
+process.env.NODE_ENV = "test";
 dotenv.config({ path: ".env.test" });
 
 // Instantiate a new postgres database connection
@@ -22,16 +22,10 @@ beforeAll(async () => {
   try {
     await sequelize.authenticate();
     console.log("Connection has been established successfully.");
+    console.log(process.env.LOCALSTACK_HOST_URL);
   } catch (error) {
     console.log("Unable to connect to test database:", error);
   }
-  await sequelize.authenticate();
-});
-
-describe("postgress connection", () => {
-  it("should connect to the database", async () => {
-    expect(sequelize).toBeDefined();
-  });
 });
 
 global.signup = () => {

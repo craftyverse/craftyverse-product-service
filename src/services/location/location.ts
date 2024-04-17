@@ -1,6 +1,10 @@
 import { QueryTypes, Sequelize } from "sequelize";
-import { BadRequestError } from "@craftyverse-au/craftyverse-common";
+import {
+  BadRequestError,
+  NotFoundError,
+} from "@craftyverse-au/craftyverse-common";
 import "dotenv/config";
+import { th } from "date-fns/locale";
 
 type Location = {
   _id: string;
@@ -30,10 +34,11 @@ export class LocationService {
   static async createLocation(
     userEmail: string,
     location: Location
-  ): Promise<[number, number]> {
+  ): Promise<any> {
     const dbInstance = new Sequelize(`${process.env.POSTGRES_CONNECTION_URI}`);
-    const storedLocation = await dbInstance.query(
-      `INSERT INTO location (
+    try {
+      const [results, metadata] = await dbInstance.query(
+        `INSERT INTO location (
         "locationId",
         "locationLegalName",
         "locationUserEmail",
@@ -74,15 +79,23 @@ export class LocationService {
         '${location.locationCreatedAt}',
         '${location.locationDeletedAt}'
       )
-        RETURNING *;`,
-      {
-        type: QueryTypes.INSERT,
-      }
-    );
-    if (!storedLocation) {
-      throw new BadRequestError("Failed to store location in the database");
+        RETURNING *;`
+      );
+      return results;
+    } catch (error) {
+      return "Error in inserting location";
     }
+  }
 
-    return storedLocation;
+  static async getLocationByLocationId(locationId: string): Promise<any> {
+    const dbInstance = new Sequelize(`${process.env.POSTGRES_CONNECTION_URI}`);
+    try {
+      const [results, metadata] = await dbInstance.query(
+        `SELECT * FROM location WHERE "locationId" = '${locationId}'`
+      );
+      return results;
+    } catch (error) {
+      return "Error in fetching location";
+    }
   }
 }

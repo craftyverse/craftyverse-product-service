@@ -8,6 +8,7 @@ type Product = {
   description: string;
   createdAt: string;
   deletedAt: string | null;
+  updatedAt: string | null;
 };
 
 export class ProductService {
@@ -18,29 +19,29 @@ export class ProductService {
    */
   static async createProduct(product: Product): Promise<any> {
     const dbInstance = new Sequelize(`${process.env.POSTGRES_CONNECTION_URI}`);
-    const storedProduct = await dbInstance.query(
-      `INSERT INTO product (
+    try {
+      const [results, metadata] = await dbInstance.query(
+        `INSERT INTO product (
         "locationId",
         "name",
         "description",
         "createdAt",
-        "deletedAt"
-      ) values (
+        "deletedAt",
+        "updatedAt"
+      ) VALUES (
         '${product.locationId}',
         '${product.name}',
         '${product.description}',
         '${product.createdAt}',
-        ${product.deletedAt}
+        '${product.deletedAt}',
+        '${product.updatedAt}'
       )
-        RETURNING *;`,
-      { type: QueryTypes.INSERT }
-    );
-
-    if (!storedProduct) {
-      throw new BadRequestError("Could not create product");
+        RETURNING *;`
+      );
+      return results;
+    } catch (error) {
+      return "Error in inserting product";
     }
-
-    return storedProduct;
   }
 
   static async getProductById(productId: string) {}

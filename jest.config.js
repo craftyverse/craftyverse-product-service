@@ -7,4 +7,7 @@ module.exports = {
   forceExit: true,
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   // clearMocks: true,
+  testEnvironmentOptions: {
+    NODE_ENV: 'test'
+  }
 };

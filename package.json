@@ -4,7 +4,8 @@
   "description": "This service manages the product catalogue of craftyverse",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
+    "start:localstack:test": "GATEWAY_LISTEN=0.0.0.0:4666 EXTERNAL_SERVICE_PORTS_START=4610 EXTERNAL_SERVICE_PORTS_END=4659 MAIN_CONTAINER_NAME=localstack-main-2 localstack start",
     "dev:terraform:init": "cd terraform && cd environments && cd dev && tflocal init",
     "dev:terraform:apply": "cd terraform && cd environments && cd dev && tflocal apply --auto-approve -var-file=variables.tfvars",
     "dev:local": "npm run dev:terraform:apply && ts-node-dev --poll src/server.ts",
@@ -42,21 +43,22 @@
     "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
     "pg": "^8.11.3",
-    "sequelize": "^6.37.1",
     "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@types/ioredis-mock": "^8.2.5",
     "@types/jest": "^29.5.12",
     "@types/supertest": "^6.0.2",
     "ioredis-mock": "^8.9.0",
     "jest": "^29.7.0",
     "jsdoc": "^4.0.2",
+    "sequelize-cli": "^6.6.2",
     "supertest": "^6.3.4",
-    "ts-jest": "^29.1.2",
-    "sequelize-cli": "^6.6.2"
+    "ts-jest": "^29.1.2"
   }
 }

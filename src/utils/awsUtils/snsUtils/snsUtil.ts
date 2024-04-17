@@ -3,13 +3,13 @@ import {
   awsConfigUtils,
   snsTopicArns,
   sqsQueueUrls,
-} from "../../../config/aws-config";
+} from "../../../../config/aws-config";
 import { NotFoundError } from "@craftyverse-au/craftyverse-common";
-import { SnsService } from "../../services/sns";
+import { SnsService } from "../../../services/sns";
 import { SQSClientConfig } from "@aws-sdk/client-sqs";
-import { SqsService } from "../../services/sqs";
+import { SqsService } from "../../../services/sqs";
 
-export class awsUtil {
+export class snsUtils {
   /**
    * This utility fucntion lists all the available SNS topics.
    * @param config

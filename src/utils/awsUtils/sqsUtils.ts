@@ -1,4 +1,4 @@
-import { SNSClientConfig, SubscribeCommandOutput } from "@aws-sdk/client-sns";
+import { SNSClientConfig } from "@aws-sdk/client-sns";
 import {
   awsConfig,
   awsConfigUtils,
@@ -41,7 +41,7 @@ export class sqsUtils {
    * @param {string} queueName
    */
   static retrieveQueueUrl = (queueName: string): string => {
-    if (sqsQueueUrls[queueName]) {
+    if (sqsQueueUrls[`${queueName}:url`]) {
       return sqsQueueUrls[queueName];
     }
     return "No queue found";
@@ -59,7 +59,7 @@ export class sqsUtils {
     topicName: string
   ): Promise<Record<string, string>> => {
     const locationCreatedQueue = await SqsService.getQueueAttributes(config, {
-      queueUrl: sqsQueueUrls[queueName],
+      queueUrl: sqsQueueUrls[`${process.env.LOCATION_CREATED_QUEUE}:url`],
       attributeNames: ["QueueArn"],
     });
 
@@ -91,8 +91,17 @@ export class sqsUtils {
   static filterMessageByLlocationId = async (
     locationId: string,
     queueName: string
-  ): Promise<Location | undefined> => {
-    let foundResource: Location | undefined;
+  ): Promise<
+    | {
+        location: Location | undefined;
+        receiptHandle: string | undefined;
+      }
+    | undefined
+  > => {
+    let foundResource: {
+      location: Location | undefined;
+      receiptHandle: string | undefined;
+    };
     const queueUrl = sqsUtils.retrieveQueueUrl(queueName);
     const messages = await SqsService.recieveQueueMessage(awsConfig, queueUrl, {
       attributeNames: ["All", "ApproximateNumberOfMessages"],
@@ -107,13 +116,19 @@ export class sqsUtils {
     messages.Messages.forEach((message) => {
       const messageBody = JSON.parse(message.Body as string);
       const resource: string = messageBody.Message;
+      const receiptHandle = message.ReceiptHandle as string;
       const JSONLocation = JSON.parse(resource);
 
       if (JSONLocation._id === locationId) {
-        foundResource = JSONLocation;
+        foundResource = {
+          location: JSONLocation,
+          receiptHandle,
+        };
+      } else {
+        return undefined;
       }
     });
 
-    return foundResource;
+    return undefined;
   };
 }

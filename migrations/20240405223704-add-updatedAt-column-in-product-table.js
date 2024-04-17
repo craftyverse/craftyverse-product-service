@@ -12,9 +12,13 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
 
     try {
-      await queryInterface.removeColumn('product', 'varientId');
+      await queryInterface.addColumn('product', 'updatedAt', {
+        type: Sequelize.DATE,
+        allowNull: true,
+      });
 
       transaction.commit();
+    
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -28,14 +32,11 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
+    const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.addColumn('product', 'varientId', {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-      });
-
+      await queryInterface.removeColumn('product', 'updatedAt');
       transaction.commit();
-    } catch (error) {
+    } catch {
       await transaction.rollback();
       throw error;
     }

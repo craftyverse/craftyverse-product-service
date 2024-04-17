@@ -7,13 +7,13 @@ import {
   RequestValidationError,
 } from "@craftyverse-au/craftyverse-common";
 import { logEvents } from "../../../middleware/log-events";
-import { LocationService } from "../../../services/location";
+import { LocationService } from "../../../services/location/location";
 import { sqsUtils } from "../../../utils/awsUtils/sqsUtils";
-import { Location } from "../../../schemas/location-schema";
-import { ProductService } from "../../../services/product";
+import { ProductService } from "../../../services/product/product";
 import { RedisService } from "../../../services/redis";
 import { SnsService } from "../../../services/sns";
 import { awsConfig } from "../../../../config/aws-config";
+import { SqsService } from "../../../services/sqs";
 
 type Product = {
   id: number;
@@ -47,22 +47,41 @@ const createProductHandler = asyncHandler(
     console.log(product);
 
     // Retrieve the location created message from the queue
-    const location: Location | undefined =
-      await sqsUtils.filterMessageByLlocationId(
-        product.locationId,
-        "location-created-queue:url"
-      );
+    const locationResposne = await sqsUtils.filterMessageByLlocationId(
+      product.locationId,
+      "location-created-queue"
+    );
 
     console.log("This is the retrieved location: ", location);
 
-    // Store location in the database
-    if (!location) {
+    if (
+      !locationResposne ||
+      !locationResposne.location ||
+      !locationResposne.receiptHandle
+    ) {
       throw new NotFoundError(
         "Could not find location with the given locationId"
       );
     }
 
-    await LocationService.createLocation(req.userEmail, location);
+    // query the location table to see if the returned location is already in the database
+    // Only proceed to create the location if it does not exist
+    const existingLocation = await LocationService.getLocationByLocationId(
+      locationResposne.location._id
+    );
+
+    if (!existingLocation) {
+      await LocationService.createLocation(
+        req.userEmail,
+        locationResposne.location
+      );
+
+      await SqsService.deleteQueueMessageById(
+        awsConfig,
+        "location-created-queue:url",
+        locationResposne.receiptHandle
+      );
+    }
 
     // store product into database
     const createdproductDbResponse = await ProductService.createProduct({
@@ -71,6 +90,7 @@ const createProductHandler = asyncHandler(
       description: product.description,
       createdAt: currentDate.toISOString(),
       deletedAt: null,
+      updatedAt: null,
     });
 
     const createdProduct: Product = createdproductDbResponse[0][0];
